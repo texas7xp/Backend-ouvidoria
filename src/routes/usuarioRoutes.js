@@ -5,9 +5,12 @@ import { isPrefeitura } from '../middlewares/roleMiddleware.js';
 
 const router = Router();
 
-// Todas as rotas /usuarios exigem login E ser da prefeitura
-router.use(authMiddleware, isPrefeitura);
+//Rotas sem necessidade de ser prefeitura
+router.delete('/:id', usuarioController.deleteUsuario);
+router.patch('/:id', usuarioController.updateUsuario);
 
+router.use(authMiddleware, isPrefeitura);
+// Todas as rotas /usuarios exigem login E ser da prefeitura
 router.get('/', usuarioController.getAllUsuarios);
 // router.get('/:id', ...);
 // router.put('/:id', ...);

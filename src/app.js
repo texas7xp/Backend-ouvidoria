@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { resolve } from 'path';
 import allRoutes from './routes/index.js';
+import multer from 'multer';
 
 class App {
   constructor() {

@@ -4,7 +4,7 @@ import { open } from 'sqlite';
 // Função para abrir a conexão com o banco
 async function openDb() {
   return open({
-    filename: './database.sqlite',
+    filename: './src/db/database.db',
     driver: sqlite3.Database,
   });
 }
