@@ -42,6 +42,8 @@ export async function signup(req, res) {
 export async function signin(req, res) {
   const { email, senha } = req.body;
 
+  console.log('Tentativa de login para o email:', email);
+
   try {
     const user = await Usuario.findByEmail(email);
     if (!user) {

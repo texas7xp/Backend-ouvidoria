@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import bcrypt from 'bcryptjs';
 
 // Função para abrir a conexão com o banco
 async function openDb() {
@@ -8,6 +9,8 @@ async function openDb() {
     driver: sqlite3.Database,
   });
 }
+
+const senhaHash = await bcrypt.hash('123456', 8);
 
 // Função para criar as tabelas (Migração)
 export async function setupDatabase() {
@@ -23,8 +26,8 @@ export async function setupDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      senha TEXT NOT NULL,
-      tipo TEXT NOT NULL CHECK(tipo IN ('cidadao', 'prefeitura')),
+      senha TEXT NOT NULL DEFAULT '${senhaHash}',
+      tipo TEXT NOT NULL CHECK(tipo IN ('cidadao', 'prefeitura')) DEFAULT 'cidadao',
       setor TEXT, -- 'Nome do usuário conectado' (setor) para prefeitura
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -86,6 +89,13 @@ export async function setupDatabase() {
     BEGIN
       UPDATE interacoes SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
     END;
+
+    INSERT OR IGNORE INTO usuarios (nome, email, senha, tipo, setor)
+    VALUES
+      ('Adm da Prefeitura 1', 'adm_prefeitura1@email.com.br', '${senhaHash}', 'prefeitura', 'Setor 1'),
+      ('Adm da Prefeitura 2', 'adm_prefeitura2@email.com.br', '${senhaHash}', 'prefeitura', 'Setor 2'),
+      ('cidadao_1', 'cidadao_1@email.com.br', '${senhaHash}', 'cidadao', NULL),
+      ('cidadao_2', 'cidadao_2@email.com.br', '${senhaHash}', 'cidadao', NULL);
   `;
 
   await db.exec(createTablesSQL);
