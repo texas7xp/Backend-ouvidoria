@@ -33,9 +33,9 @@ export async function deleteUsuario(req, res) {
 
 export async function updateUsuario(req, res) {
   const { id } = req.params;
-  const { nome, email, setor } = req.body;
+  const { nome, email, setor, cpf, telefone, endereco } = req.body;
 
-  if (!nome && !email && typeof setor === "undefined") {
+  if (!nome && !email && typeof setor === "undefined" && !cpf && !telefone && !endereco) {
     return res.status(400).json({ error: "Nenhum campo para atualizar." });
   }
 
@@ -45,9 +45,26 @@ export async function updateUsuario(req, res) {
       return res.status(404).json({ error: "Usuário não encontrado." });
     }
 
+    const onlyDigits = (s) => String(s || '').replace(/\D+/g, '');
+    const isEmailValid = (e) => /.+@.+\..+/.test(e);
+    const isCpfValid = (cpf) => {
+      const d = onlyDigits(cpf);
+      if (d.length !== 11) return false;
+      if (/^(\d)\1+$/.test(d)) return false;
+      return true;
+    };
+    const isPhoneValid = (tel) => {
+      const d = onlyDigits(tel);
+      return d.length >= 10 && d.length <= 11;
+    };
+
     const updateData = {};
-    if (nome) updateData.nome = nome;
-    if (email) updateData.email = email;
+    if (nome) updateData.nome = String(nome).trim();
+    if (email) {
+      const norm = String(email).trim().toLowerCase();
+      if (!isEmailValid(norm)) return res.status(400).json({ error: 'E-mail inválido.' });
+      updateData.email = norm;
+    }
 
     // Permite alteração de setor somente para contexto "prefeitura".
     // Verifica possíveis campos de sessão/autenticação (ajuste conforme sua aplicação)
@@ -62,6 +79,16 @@ export async function updateUsuario(req, res) {
       }
       updateData.setor = setor;
     }
+
+    if (cpf) {
+      if (!isCpfValid(cpf)) return res.status(400).json({ error: 'CPF inválido.' });
+      updateData.cpf = onlyDigits(cpf);
+    }
+    if (telefone) {
+      if (!isPhoneValid(telefone)) return res.status(400).json({ error: 'Telefone inválido.' });
+      updateData.telefone = onlyDigits(telefone);
+    }
+    if (endereco) updateData.endereco = String(endereco).trim();
 
     const result = await Usuario.update(id, updateData);
 

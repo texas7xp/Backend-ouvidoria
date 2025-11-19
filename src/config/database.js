@@ -4,8 +4,9 @@ import bcrypt from 'bcryptjs';
 
 // Função para abrir a conexão com o banco
 async function openDb() {
+  const filename = process.env.DATABASE_PATH || './src/db/database.db';
   return open({
-    filename: './src/db/database.db',
+    filename,
     driver: sqlite3.Database,
   });
 }
@@ -28,7 +29,10 @@ export async function setupDatabase() {
       email TEXT NOT NULL UNIQUE,
       senha TEXT NOT NULL DEFAULT '${senhaHash}',
       tipo TEXT NOT NULL CHECK(tipo IN ('cidadao', 'prefeitura')) DEFAULT 'cidadao',
-      setor TEXT, -- 'Nome do usuário conectado' (setor) para prefeitura
+      setor TEXT,
+      cpf TEXT,
+      telefone TEXT,
+      endereco TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -100,6 +104,20 @@ export async function setupDatabase() {
 
   await db.exec(createTablesSQL);
   console.log('Tabelas criadas ou já existentes.');
+
+  // Migração: adiciona colunas ausentes em 'usuarios' se não existirem
+  const cols = await db.all("PRAGMA table_info('usuarios')");
+  const names = new Set(cols.map((c) => c.name));
+  const addCol = async (name, type) => {
+    if (!names.has(name)) {
+      await db.exec(`ALTER TABLE usuarios ADD COLUMN ${name} ${type}`);
+      console.log(`Coluna adicionada: usuarios.${name}`);
+    }
+  };
+  await addCol('cpf', 'TEXT');
+  await addCol('telefone', 'TEXT');
+  await addCol('endereco', 'TEXT');
+
   return db;
 }
 

@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node --watch-path=src/routes --watch-path=src/controllers --watch src/server.js"
+    "start": "node src/server.js"
   },
   "repository": {
     "type": "git",

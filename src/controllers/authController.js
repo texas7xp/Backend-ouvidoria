@@ -14,16 +14,46 @@ function generateToken(user) {
 // POST /signup
 export async function signup(req, res) {
   const { email } = req.body;
+  const body = {
+    nome: String(req.body?.nome || '').trim(),
+    email: String(req.body?.email || '').trim().toLowerCase(),
+    senha: String(req.body?.senha || ''),
+    tipo: req.body?.tipo,
+    setor: req.body?.setor,
+    cpf: req.body?.cpf,
+    telefone: req.body?.telefone,
+    endereco: req.body?.endereco,
+  };
+
+  // Validações básicas
+  const isEmailValid = (e) => /.+@.+\..+/.test(e);
+  const onlyDigits = (s) => String(s || '').replace(/\D+/g, '');
+  const isCpfValid = (cpf) => {
+    const d = onlyDigits(cpf);
+    if (d.length !== 11) return false;
+    if (/^(\d)\1+$/.test(d)) return false;
+    return true; // validação simplificada para este contexto
+  };
+  const isPhoneValid = (tel) => {
+    const d = onlyDigits(tel);
+    return d.length >= 10 && d.length <= 11;
+  };
+
+  if (!body.nome) return res.status(400).json({ error: 'Nome é obrigatório.' });
+  if (!isEmailValid(body.email)) return res.status(400).json({ error: 'E-mail inválido.' });
+  if (body.senha && body.senha.length < 6) return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres.' });
+  if (body.cpf && !isCpfValid(body.cpf)) return res.status(400).json({ error: 'CPF inválido.' });
+  if (body.telefone && !isPhoneValid(body.telefone)) return res.status(400).json({ error: 'Telefone inválido.' });
   
   try {
     // Verifica se o usuário já existe
-    const userExists = await Usuario.findByEmail(email);
+    const userExists = await Usuario.findByEmail(body.email);
     if (userExists) {
       return res.status(400).json({ error: 'Este e-mail já está em uso.' });
     }
 
     // Cria o usuário
-    const user = await Usuario.create(req.body);
+    const user = await Usuario.create(body);
 
     // Gera o token
     const token = generateToken(user);
@@ -40,7 +70,8 @@ export async function signup(req, res) {
 
 // POST /signin (User pediu GET, mas POST é o correto para enviar body)
 export async function signin(req, res) {
-  const { email, senha } = req.body;
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const senha = String(req.body?.senha || '');
 
   console.log('Tentativa de login para o email:', email);
 
