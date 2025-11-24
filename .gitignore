@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # Ignora os arquivos do backend
 src/uploads/
 database.sqlite
+src/db/database.db
+desktop.ini
